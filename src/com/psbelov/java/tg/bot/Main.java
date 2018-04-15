@@ -10,23 +10,15 @@ public class Main {
         System.out.println(str);
     }
 
-    private static String API_KEY;
-
     private final TelegramBot telegramBot;
 
-    public static final String ME = "@pbelov_bot";
-
     public static void main(String[] args) {
-
-        //This simply takes the bots API key from the first command line argument sent to the bot.
-        //You do not have to retrieve the API key in this way.
-        API_KEY = ;
         new Main();
     }
 
     public Main() {
         //This returns a logged in TelegramBot instance or null if the API key was invalid.
-        telegramBot = TelegramBot.login(API_KEY);
+        telegramBot = TelegramBot.login(Tokens.API_KEY);
 
         if (telegramBot != null) {
             println("Started bot");

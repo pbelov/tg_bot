@@ -95,14 +95,15 @@ public class EchoListener implements Listener {
         final String STATS = "stats ";
         final String COMMAND_DAY = "day";
         final String COMMAND_ME = "me";
+        final String HNTR = "хнтр";
 
-        if (messageText.equals(BOT_PREFIX + "включись")) {
+        if (messageText.equals(BOT_PREFIX + "вкл")) {
             if (senderUserName.equals(ME)) {
                 botStatus.put(GLOBAL, true);
             } else {
                 TgMsgUtil.sendToChat(event, GTFO_TEXT);
             }
-        } else if (messageText.equals(BOT_PREFIX + "выключись")) {
+        } else if (messageText.equals(BOT_PREFIX + "выкл")) {
             if (senderUserName.equals(ME)) {
                 botStatus.put(GLOBAL, false);
             } else {
@@ -111,19 +112,19 @@ public class EchoListener implements Listener {
         }
 
         if (!DEBUG && botStatus.get(GLOBAL)) {
+            if (!newDayMap.get(chatName).equals(prevDayMap.get(chatName)) && !messageText.equals(COMMAND_DAY)) {
+                if (hour > 6 && hour < 12) {
+                    TgMsgUtil.replyInChat(event, getMorningText(random.nextInt(mornings.length), hour));
+                }
+                SimpleDateFormat format = new SimpleDateFormat("d MMMM, EEEE", Locale.forLanguageTag(RU_TAG));
+                TgMsgUtil.sendToChat(event, format.format(new Date()));
+                prevDayMap.put(chatName, day);
+//            showDay(event);
+            }
+
             if (messageText.startsWith("/")) {
                 messageText = messageText.substring(1);
                 Utils.println(TAG, "command [" + messageText + "]");
-                if (!newDayMap.get(chatName).equals(prevDayMap.get(chatName)) && !messageText.equals(COMMAND_DAY)) {
-                    if (hour > 6 && hour < 12) {
-                        TgMsgUtil.replyInChat(event, getMorningText(random.nextInt(mornings.length), hour));
-                    }
-                    SimpleDateFormat format = new SimpleDateFormat("d MMMM, EEEE", Locale.forLanguageTag(RU_TAG));
-                    TgMsgUtil.sendToChat(event, format.format(new Date()));
-                    prevDayMap.put(chatName, day);
-//            showDay(event);
-                }
-
                 if (messageText.equals("time")) {
                     SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss", Locale.forLanguageTag(RU_TAG));
                     TgMsgUtil.replyInChat(event, format.format(new Date()));
@@ -133,7 +134,7 @@ public class EchoListener implements Listener {
                 } else if (messageText.startsWith(COMMAND_ME)) {
                     event.getMessage().getBotInstance().deleteMessage(event.getMessage());
                     SendableTextMessage sendableMessage = SendableTextMessage.builder()
-                            .message(senderUserName.replaceFirst("@", "") + "*" + messageText.replaceFirst(COMMAND_ME, "") + "*")
+                            .message(senderUserName.replaceFirst("@", "") + "*" + event.getContent().getContent().substring(1).trim().replaceFirst(COMMAND_ME, "") + "*")
                             .parseMode(ParseMode.MARKDOWN)
                             .build();
                     event.getMessage().getBotInstance().sendMessage(event.getChat(), sendableMessage);
@@ -216,7 +217,9 @@ public class EchoListener implements Listener {
                     } else if (i == 2) {
                         TgMsgUtil.replyInChat(event, "фигня");
                     }
-                }
+                } else if (messageText.startsWith(HNTR)) {
+                TgMsgUtil.sendToChat(event, ME + ", тебя призывает в чат " + senderUserName);
+            }
             }
             if (getPartOfDay() == getPartOfDayInt(messageText)) {
                 TgMsgUtil.replyInChat(event, "д.");
@@ -334,6 +337,7 @@ public class EchoListener implements Listener {
             while ((line = reader.readLine()) != null) {
                 builder.append(line);
             }
+
 
             JSONObject json = new JSONObject(builder.toString());
             String imageUrl = json.getJSONObject("data").getJSONObject("result").getJSONArray("items").getJSONObject(0).getString("media_fullsize");

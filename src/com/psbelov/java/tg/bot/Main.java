@@ -10,15 +10,13 @@ public class Main {
         System.out.println(str);
     }
 
-    private final TelegramBot telegramBot;
-
     public static void main(String[] args) {
         new Main();
     }
 
     public Main() {
         //This returns a logged in TelegramBot instance or null if the API key was invalid.
-        telegramBot = TelegramBot.login(Tokens.API_KEY);
+        TelegramBot telegramBot = TelegramBot.login(Tokens.API_KEY);
 
         if (telegramBot != null) {
             println("Started bot");

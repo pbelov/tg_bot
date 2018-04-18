@@ -24,17 +24,15 @@ import java.util.*;
 import static com.psbelov.java.tg.bot.FileUtils.WORKING_DIR;
 import static com.psbelov.java.tg.bot.Utils.LOGDIR;
 
+@SuppressWarnings("FieldCanBeLocal")
 public class EchoListener implements Listener {
-    private final boolean DEBUG = !true;
+    private final boolean DEBUG = false;
     private final String TAG = "EchoListener";
-
-    private int lastDay = -1;
 
     private long fasID = -1;
     private long muteID = -1;
     private String userToFas = null;
     private String userToMute = null;
-    private final String BOT_PREFIX = "бот, ";
     private final String GLOBAL = "global";
 
     private final String ME = "@pbelov";
@@ -43,6 +41,7 @@ public class EchoListener implements Listener {
 
     private final String[] mornings = {"утро", "утрецо", "утрота", "морнинг"};
 
+    // if true - it will work, otherwise - not. obviously.
     private Map<String, Boolean> botStatus = new HashMap<String, Boolean>() {{
         put("global", false);
     }};
@@ -53,49 +52,79 @@ public class EchoListener implements Listener {
     private Map<String, Integer> prevDayMap = new HashMap<>();
     private File catsFile = getGoogleQuery("cats");
 
-    @Override
-    public void onTextMessageReceived(TextMessageReceivedEvent event) {
-        handleMessage(event);
+    private String chatName = null;
+    private String personName = null;
+    private String messageText = null;
+    private String senderUserName;
+    private Message message;
+    private User sender;
+
+    private void getBaseData(TextMessageReceivedEvent event) {
+        chatName = event.getChat().getName();
+        message = event.getMessage();
+        sender = message.getSender();
+        senderUserName = sender.getUsername();
+        personName = sender.getFullName() + " (" + senderUserName + ")";
+        messageText = event.getContent().getContent().trim();
     }
 
     @Override
     public void onCommandMessageReceived(CommandMessageReceivedEvent event) {
+        getBaseData(event);
+        Utils.println(TAG, "[command] " + chatName + ", " + StringUtils.getCurrentTimeStamp() + "; " + personName + ": " + messageText, chatName);
+        handleCommand(event);
+//        handleMessage(event);
+    }
+
+    @Override
+    public void onTextMessageReceived(TextMessageReceivedEvent event) {
+        getBaseData(event);
+        Utils.println(TAG, "[message] " + chatName + ", " + StringUtils.getCurrentTimeStamp() + "; " + personName + ": " + messageText, chatName);
+
         handleMessage(event);
     }
 
-    private void handleMessage(TextMessageReceivedEvent event) {
-        Calendar calendar = Calendar.getInstance();
-        int day = calendar.get(Calendar.DAY_OF_WEEK);
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+    private void handleCommand(CommandMessageReceivedEvent event) {
+        String[] args = event.getArgs();
+        String argsString = event.getArgsString();
+        String command = event.getCommand();
+        Utils.println(TAG, "handleCommand: args = " + Arrays.toString(args) + ", argsString = " + argsString + ", command = " + command);
 
-        String messageText = event.getContent().getContent().trim();
-        String chatName = event.getChat().getName();
-        Message message = event.getMessage();
-        User sender = message.getSender();
-        String senderUserName = sender.getUsername();
-        String personName = sender.getFullName() + " (" + senderUserName + ")";
-        messageText = messageText.replace(BOT, "").trim().toLowerCase();
-
-        if (!messageText.startsWith("/")) {
-            incrementMessagesNumberFor(day, chatName, personName.replaceAll("@", ""));
-        }
-
-        newDayMap.put(chatName, day);
-
-        Utils.println(TAG, chatName + ", " + StringUtils.getCurrentTimeStamp() + "; " + personName + ": " + messageText, chatName);
-
-        Random random = new Random(System.currentTimeMillis());
-
-        final String fasString = "агрись на ";
-        final String antifasString = "хватит";
-        final String muteString = "выключи ";
-        final String BOT_PREFIX = "бот, ";
-        final String GTFO_TEXT = "gtfo!";
-        final String FIND_TEXT = "найди ";
-        final String STATS = "stats ";
+        final String STATS = "stats";
         final String COMMAND_DAY = "day";
         final String COMMAND_ME = "me";
-        final String HNTR = "хнтр";
+
+        if (command.equals("time")) {
+            SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss", Locale.forLanguageTag(RU_TAG));
+            TgMsgUtil.replyInChat(event, format.format(new Date()));
+        } else if (command.equals("date")) {
+            SimpleDateFormat format = new SimpleDateFormat("d MMMM, EEEE", Locale.forLanguageTag(RU_TAG));
+            TgMsgUtil.replyInChat(event, format.format(new Date()));
+        } else if (command.startsWith(COMMAND_ME)) {
+            event.getMessage().getBotInstance().deleteMessage(event.getMessage());
+            SendableTextMessage sendableMessage = SendableTextMessage.builder()
+                    .message(senderUserName.replaceFirst("@", "") + "*" + argsString + "*")
+                    .parseMode(ParseMode.MARKDOWN)
+                    .build();
+            event.getMessage().getBotInstance().sendMessage(event.getChat(), sendableMessage);
+        } else if (command.equals("ping")) {
+            TgMsgUtil.replyInChat(event, "pong!");
+        } else if (command.equals("top")) {
+            TgMsgUtil.sendToChat(event, getTop3ForTodayText(chatName));
+        } else if (command.equals(COMMAND_DAY)) {
+            showDay(event);
+        } else if (command.equals(STATS)) {
+            if (argsString.length() == 0) {
+                TgMsgUtil.sendToChat(event, getStats(chatName, 3));
+            } else {
+                TgMsgUtil.sendToChat(event, getStats(chatName, argsString.trim()));
+            }
+        }
+    }
+
+    private void handleMessage(TextMessageReceivedEvent event) {
+        final String BOT_PREFIX = "бот, ";
+        final String GTFO_TEXT = "gtfo!";
 
         if (messageText.equals(BOT_PREFIX + "вкл")) {
             if (senderUserName.equals(ME)) {
@@ -111,151 +140,147 @@ public class EchoListener implements Listener {
             }
         }
 
-        if (!DEBUG && botStatus.get(GLOBAL)) {
-            if (!newDayMap.get(chatName).equals(prevDayMap.get(chatName)) && !messageText.equals(COMMAND_DAY)) {
-                if (hour > 6 && hour < 12) {
-                    TgMsgUtil.replyInChat(event, getMorningText(random.nextInt(mornings.length), hour));
-                }
-                SimpleDateFormat format = new SimpleDateFormat("d MMMM, EEEE", Locale.forLanguageTag(RU_TAG));
-                TgMsgUtil.sendToChat(event, format.format(new Date()));
-                prevDayMap.put(chatName, day);
-//            showDay(event);
-            }
-
-            if (messageText.startsWith("/")) {
-                messageText = messageText.substring(1);
-                Utils.println(TAG, "command [" + messageText + "]");
-                if (messageText.equals("time")) {
-                    SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss", Locale.forLanguageTag(RU_TAG));
-                    TgMsgUtil.replyInChat(event, format.format(new Date()));
-                } else if (messageText.equals("date")) {
-                    SimpleDateFormat format = new SimpleDateFormat("d MMMM, EEEE", Locale.forLanguageTag(RU_TAG));
-                    TgMsgUtil.replyInChat(event, format.format(new Date()));
-                } else if (messageText.startsWith(COMMAND_ME)) {
-                    event.getMessage().getBotInstance().deleteMessage(event.getMessage());
-                    SendableTextMessage sendableMessage = SendableTextMessage.builder()
-                            .message(senderUserName.replaceFirst("@", "") + "*" + event.getContent().getContent().substring(1).trim().replaceFirst(COMMAND_ME, "") + "*")
-                            .parseMode(ParseMode.MARKDOWN)
-                            .build();
-                    event.getMessage().getBotInstance().sendMessage(event.getChat(), sendableMessage);
-                } else if (messageText.startsWith("ping")) {
-                    TgMsgUtil.replyInChat(event, "pong!");
-                } else if (messageText.startsWith("top")) {
-                    TgMsgUtil.sendToChat(event, getTop3ForTodayText(chatName));
-                } else if (messageText.equals(COMMAND_DAY)) {
-                    showDay(event);
-                } else if (messageText.equals(STATS.trim())) {
-                    TgMsgUtil.sendToChat(event, getStats(chatName, 3));
-                } else if (messageText.startsWith(STATS)) {
-                    String wordString = messageText.replaceFirst(STATS, "");
-                    TgMsgUtil.sendToChat(event, getStats(chatName, wordString.trim()));
-                }
-            } else if (messageText.startsWith(BOT_PREFIX)) {
-                messageText = messageText.replace(BOT_PREFIX, "");
-                Utils.println(TAG, "request [" + messageText + "]");
-                if (messageText.startsWith(fasString)) {
-                    if (senderUserName.equals(ME)) {
-                        userToFas = messageText.replaceFirst(fasString, "");
-                        System.out.println("принято!");
-                        TgMsgUtil.replyInChat(event, "принято!");
-                        if (userToMute.equals(userToFas)) {
-                            userToMute = null;
-                            muteID = -1;
-                        }
-                    } else {
-                        TgMsgUtil.replyInChat(event, "не ты мой хозяин!");
-                    }
-                } else if (messageText.startsWith(antifasString) && senderUserName.equals(ME)) {
-                    userToFas = null;
-                    fasID = -1;
-                    userToMute = null;
-                    muteID = -1;
-                    System.out.println("ладно...");
-                    TgMsgUtil.replyInChat(event, "ладно...");
-                } else if (messageText.equals("котиков!")) {
-                    Utils.println(TAG, "cats activated!");
-                    if (catsFile != null) {
-                        InputFile inputFile = new InputFile(catsFile);
-                        SendablePhotoMessage sendablePhotoMessage = SendablePhotoMessage.builder()
-                                .photo(inputFile)
-                                .build();
-                        event.getChat().sendMessage(sendablePhotoMessage);
-                        catsFile.delete();
-                        catsFile = getGoogleQuery("cats");
-                    } else {
-                        TgMsgUtil.replyInChat(event, "у меня котопередоз, подождите");
-                    }
-                } else if (messageText.startsWith(FIND_TEXT)) {
-                    find(messageText.replace(FIND_TEXT, ""), event);
-                } else if (messageText.equals("иди нахуй")) {
-                    TgMsgUtil.replyInChat(event, "fuck you!");
-                }
-            } else {
-                if (messageText.equals("42")) {
-                    TgMsgUtil.replyInChat(event, "don't panic!");
-                } else if (messageText.startsWith("ты ") && messageText.split(" ", -1).length == 2) {
-                    TgMsgUtil.replyInChat(event, "нет ты!");
-                } else if (messageText.startsWith("иди нахуй") && messageText.split(" ", -1).length == 2) {
-                    TgMsgUtil.replyInChat(event, "сам иди!");
-                } else if (messageText.startsWith(muteString)) {
-                    if (senderUserName.equals(ME)) {
-                        TgMsgUtil.replyInChat(event, "принято!");
-                        userToMute = messageText.replaceFirst(muteString, "");
-                        if (userToMute.equals(userToFas)) {
-                            userToFas = null;
-                            fasID = -1;
-                        }
-                    } else {
-                        TgMsgUtil.replyInChat(event, "не ты мой хозяин!");
-                    }
-                } else if (messageText.equals("что было?") || messageText.equals("что тут было?") || messageText.equals("что тут у вас?") || messageText.equals("что тут?")) {
-                    int i = random.nextInt(3);
-                    if (i == 0) {
-                        TgMsgUtil.replyInChat(event, "ничего интересного");
-                    } else if (i == 1) {
-                        TgMsgUtil.replyInChat(event, "хрень какая-то");
-                    } else if (i == 2) {
-                        TgMsgUtil.replyInChat(event, "фигня");
-                    }
-                } else if (messageText.startsWith(HNTR)) {
-                TgMsgUtil.sendToChat(event, ME + ", тебя призывает в чат " + senderUserName);
-            }
-            }
-            if (getPartOfDay() == getPartOfDayInt(messageText)) {
-                TgMsgUtil.replyInChat(event, "д.");
-            } else if (getPartOfDayInt(messageText) != -1) {
-                TgMsgUtil.replyInChat(event, "нт.");
-            }
-
-            if (userToFas != null && senderUserName.contains(userToFas)) {
-                fasID = event.getMessage().getSender().getId();
-            }
-
-            if (userToMute != null && senderUserName.contains(userToMute)) {
-                muteID = event.getMessage().getSender().getId();
-            }
-
-            if (sender.getId() == fasID) {
-                String text = null;
-                if (hour >= 8 && hour <= 17) {
-                    text = "работать иди";
-                } else if (hour >= 18 || hour <= 3) {
-                    text = "спать иди";
-                } else {
-                    // TBD
-                }
-
-                if (text != null && random.nextInt(42) == 0) {
-                    text += ", пожалуйста";
-                }
-                TgMsgUtil.replyInChat(event, text);
-            }
-
-            if (sender.getId() == muteID) {
-                message.getBotInstance().deleteMessage(message);
-            }
+        // if debug mode, react only on owner
+        if (!botStatus.get(GLOBAL) || (DEBUG && senderUserName.equals(ME))) {
+            return;
         } else {
             Utils.println(TAG, "debug mode = " + DEBUG + ", bot status = " + botStatus.get(GLOBAL));
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+
+        incrementMessagesNumberFor(day, chatName, personName.replaceAll("@", ""));
+        newDayMap.put(chatName, day);
+
+        messageText = messageText.replace(BOT, "").trim().toLowerCase();
+
+        final String fasString = "агрись на ";
+        final String antifasString = "хватит";
+        final String muteString = "выключи ";
+        final String FIND_TEXT = "найди ";
+        final String HNTR = "хнтр";
+
+        final Random random = new Random(System.currentTimeMillis());
+
+        if (!newDayMap.get(chatName).equals(prevDayMap.get(chatName))) {
+            if (hour > 6 && hour < 12) {
+                TgMsgUtil.replyInChat(event, getMorningText(random.nextInt(mornings.length), hour));
+            }
+            SimpleDateFormat format = new SimpleDateFormat("d MMMM, EEEE", Locale.forLanguageTag(RU_TAG));
+            TgMsgUtil.sendToChat(event, format.format(new Date()));
+            prevDayMap.put(chatName, day);
+//            showDay(event);
+        }
+
+        if (messageText.startsWith(BOT_PREFIX)) {
+            messageText = messageText.replace(BOT_PREFIX, "");
+            Utils.println(TAG, "request [" + messageText + "]");
+            if (messageText.startsWith(fasString)) {
+                if (senderUserName.equals(ME)) {
+                    userToFas = messageText.replaceFirst(fasString, "");
+                    System.out.println("принято!");
+                    TgMsgUtil.replyInChat(event, "принято!");
+                    if (userToMute.equals(userToFas)) {
+                        userToMute = null;
+                        muteID = -1;
+                    }
+                } else {
+                    TgMsgUtil.replyInChat(event, "не ты мой хозяин!");
+                }
+            } else if (messageText.startsWith(antifasString) && senderUserName.equals(ME)) {
+                userToFas = null;
+                fasID = -1;
+                userToMute = null;
+                muteID = -1;
+                System.out.println("ладно...");
+                TgMsgUtil.replyInChat(event, "ладно...");
+            } else if (messageText.equals("котиков!")) {
+                Utils.println(TAG, "cats activated!");
+                if (catsFile != null) {
+                    InputFile inputFile = new InputFile(catsFile);
+                    SendablePhotoMessage sendablePhotoMessage = SendablePhotoMessage.builder()
+                            .photo(inputFile)
+                            .build();
+                    event.getChat().sendMessage(sendablePhotoMessage);
+                    catsFile.delete();
+                    catsFile = getGoogleQuery("cats");
+                } else {
+                    TgMsgUtil.replyInChat(event, "у меня котопередоз, подождите");
+                }
+            } else if (messageText.startsWith(FIND_TEXT)) {
+                find(messageText.replace(FIND_TEXT, ""), event);
+            } else if (messageText.equals("иди нахуй")) {
+                TgMsgUtil.replyInChat(event, "fuck you");
+            } else if (messageText.equals("fuck you")) {
+                TgMsgUtil.replyInChat(event, "иди нахуй");
+            }
+        } else {
+            if (messageText.equals("42")) {
+                TgMsgUtil.replyInChat(event, "don't panic!");
+            } else if (messageText.startsWith("ты ") && messageText.split(" ", -1).length == 2) {
+                TgMsgUtil.replyInChat(event, "нет ты!");
+            } else if (messageText.startsWith("иди нахуй") && messageText.split(" ", -1).length == 2) {
+                TgMsgUtil.replyInChat(event, "сам иди!");
+            } else if (messageText.startsWith(muteString)) {
+                if (senderUserName.equals(ME)) {
+                    TgMsgUtil.replyInChat(event, "принято!");
+                    userToMute = messageText.replaceFirst(muteString, "");
+                    if (userToMute.equals(userToFas)) {
+                        userToFas = null;
+                        fasID = -1;
+                    }
+                } else {
+                    TgMsgUtil.replyInChat(event, "не ты мой хозяин!");
+                }
+            } else if (messageText.equals("что было?") || messageText.equals("что тут было?") || messageText.equals("что тут у вас?") || messageText.equals("что тут?")) {
+                int i = random.nextInt(3);
+                if (i == 0) {
+                    TgMsgUtil.replyInChat(event, "ничего интересного");
+                } else if (i == 1) {
+                    TgMsgUtil.replyInChat(event, "хрень какая-то");
+                } else if (i == 2) {
+                    TgMsgUtil.replyInChat(event, "фигня");
+                }
+            } else if (messageText.startsWith(HNTR)) {
+                TgMsgUtil.sendToChat(event, ME + ", тебя призывает в чат " + senderUserName);
+            }
+        }
+
+        if (getPartOfDay() == getPartOfDayInt(messageText)) {
+            TgMsgUtil.replyInChat(event, "д.");
+        } else if (getPartOfDayInt(messageText) != -1) {
+            TgMsgUtil.replyInChat(event, "нт.");
+        }
+
+        if (userToFas != null && senderUserName.contains(userToFas)) {
+            fasID = event.getMessage().getSender().getId();
+        }
+
+        if (userToMute != null && senderUserName.contains(userToMute)) {
+            muteID = event.getMessage().getSender().getId();
+        }
+
+        if (sender.getId() == fasID) {
+            String text = null;
+            if (hour >= 8 && hour <= 17) {
+                text = "работать иди";
+            } else if (hour >= 18 || hour <= 3) {
+                text = "спать иди";
+            } else {
+                // TBD
+            }
+
+            if (text != null && random.nextInt(42) == 0) {
+                text += ", пожалуйста";
+            }
+            TgMsgUtil.replyInChat(event, text);
+        }
+
+        // remove all messages from muted user
+        if (sender.getId() == muteID) {
+            message.getBotInstance().deleteMessage(message);
         }
     }
 
@@ -275,7 +300,6 @@ public class EchoListener implements Listener {
 
     private int getPartOfDay() {
         Calendar calendar = Calendar.getInstance();
-        int day = calendar.get(Calendar.DAY_OF_WEEK);
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
 
         if (hour >= 6 && hour < 12) {
@@ -289,8 +313,9 @@ public class EchoListener implements Listener {
         }
     }
 
-    private void find(String messageText, TextMessageReceivedEvent event) {
-        File file = getGoogleQuery(messageText);
+    // tries to find an image for the query
+    private void find(String query, TextMessageReceivedEvent event) {
+        File file = getGoogleQuery(query);
         if (file != null) {
             InputFile inputFile = new InputFile(file);
             SendablePhotoMessage sendablePhotoMessage = SendablePhotoMessage.builder()
@@ -300,7 +325,7 @@ public class EchoListener implements Listener {
             event.getChat().sendMessage(sendablePhotoMessage);
             file.delete();
         } else {
-            TgMsgUtil.replyInChat(event, "у меня передоз, подождите");
+            TgMsgUtil.replyInChat(event, "что-то пошло не так");
         }
     }
 

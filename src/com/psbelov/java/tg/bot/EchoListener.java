@@ -71,7 +71,7 @@ public class EchoListener implements Listener {
     @Override
     public void onCommandMessageReceived(CommandMessageReceivedEvent event) {
         getBaseData(event);
-        Utils.println(TAG, "[command] " + chatName + ", " + StringUtils.getCurrentTimeStamp() + "; " + personName + ": " + messageText, chatName);
+        Utils.println(TAG, chatName + ", " + StringUtils.getCurrentTimeStamp() + "; " + personName + ": " + messageText, chatName);
         handleCommand(event);
 //        handleMessage(event);
     }
@@ -79,7 +79,7 @@ public class EchoListener implements Listener {
     @Override
     public void onTextMessageReceived(TextMessageReceivedEvent event) {
         getBaseData(event);
-        Utils.println(TAG, "[message] " + chatName + ", " + StringUtils.getCurrentTimeStamp() + "; " + personName + ": " + messageText, chatName);
+        Utils.println(TAG, chatName + ", " + StringUtils.getCurrentTimeStamp() + "; " + personName + ": " + messageText, chatName);
 
         handleMessage(event);
     }
@@ -103,7 +103,7 @@ public class EchoListener implements Listener {
         } else if (command.startsWith(COMMAND_ME)) {
             event.getMessage().getBotInstance().deleteMessage(event.getMessage());
             SendableTextMessage sendableMessage = SendableTextMessage.builder()
-                    .message(senderUserName.replaceFirst("@", "") + "*" + argsString + "*")
+                    .message(senderUserName.replaceFirst("@", "") + " *" + argsString + "*")
                     .parseMode(ParseMode.MARKDOWN)
                     .build();
             event.getMessage().getBotInstance().sendMessage(event.getChat(), sendableMessage);
@@ -484,10 +484,11 @@ public class EchoListener implements Listener {
                 }
 
                 String wordsInLine[] = line.trim().toLowerCase().split(" ", -1);
+                if (wordsInLine.length > 0 && wordsInLine[0].startsWith("/")) {
+                    continue;
+                }
+
                 for (String word : wordsInLine) {
-                    if (word.startsWith("/")) {
-                        continue;
-                    }
                     word = word
 //                        .replaceAll(",", "")
 //                        .replaceAll("\\.", "")

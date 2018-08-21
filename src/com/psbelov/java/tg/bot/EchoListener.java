@@ -443,10 +443,22 @@ public class EchoListener implements Listener {
 
     private void getRates(TextMessageReceivedEvent event, String code) {
         try {
-            JSONObject jsonObject = getJSON("https://www.cbr-xml-daily.ru/daily_json.js");
-            JSONObject valutes = jsonObject.getJSONObject("Valute");
-            String usdValue = getValue(valutes, code);
-            String msg = code + ": " + usdValue;
+            String msg = code + ": "
+            if code.size() == 3 { // going to Russian Central Bank
+                JSONObject jsonObject = getJSON("https://www.cbr-xml-daily.ru/daily_json.js");
+                JSONObject valutes = jsonObject.getJSONObject("Valute");
+                String usdValue = getValue(valutes, code);
+                msg = code + ": " + usdValue;
+            } else if code.size() == 4 { // getting values of
+                // TODO: add support for current day via function=TIME_SERIES_INTRADAY  https://www.alphavantage.co/documentation/#intraday
+                String url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=" + code + "&apikey=" + Tokens.ALPHAVANTAGE_KEY;
+                JSONObject jsonObject = getJSON(url)
+                String lastKnownDay = jsonObject.getJSONObject("Meta Data").getString("3. Last Refreshed")
+                double closeValue = jsonObject.getJSONObject("Time Series (Daily)").getJSONObject(lastKnownDay).getDouble("4. close")
+                msg += closeValue + " (for " + lastKnownDay + ")"
+            } else {
+                msg = "I don't know how to provide rates for " + code
+            }
             TgMsgUtil.replyInChat(event, msg);
         } catch (IOException e) {
             e.printStackTrace();

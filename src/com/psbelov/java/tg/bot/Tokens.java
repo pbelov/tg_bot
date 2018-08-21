@@ -6,5 +6,6 @@ public class Tokens {
 
     public static String API_KEY = "";
     public static String YANDEX_KEY = "";
+    public static Strign ALPHAVANTAGE_KEY = "";
 
 }

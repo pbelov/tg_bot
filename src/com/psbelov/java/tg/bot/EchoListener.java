@@ -1,13 +1,16 @@
 package com.psbelov.java.tg.bot;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import pro.zackpollard.telegrambot.api.chat.message.Message;
+import pro.zackpollard.telegrambot.api.chat.message.content.type.PhotoSize;
 import pro.zackpollard.telegrambot.api.chat.message.send.InputFile;
 import pro.zackpollard.telegrambot.api.chat.message.send.ParseMode;
 import pro.zackpollard.telegrambot.api.chat.message.send.SendablePhotoMessage;
 import pro.zackpollard.telegrambot.api.chat.message.send.SendableTextMessage;
 import pro.zackpollard.telegrambot.api.event.Listener;
 import pro.zackpollard.telegrambot.api.event.chat.message.CommandMessageReceivedEvent;
+import pro.zackpollard.telegrambot.api.event.chat.message.PhotoMessageReceivedEvent;
 import pro.zackpollard.telegrambot.api.event.chat.message.TextMessageReceivedEvent;
 import pro.zackpollard.telegrambot.api.user.User;
 
@@ -18,6 +21,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -34,6 +41,8 @@ public class EchoListener implements Listener {
     private String userToFas = null;
     private String userToMute = null;
     private final String GLOBAL = "global";
+
+    private static final String FPS_SUBDIR = "fps";
 
     private final String ME = "@pbelov";
     private final String BOT = "@pbelov_bot";
@@ -84,6 +93,15 @@ public class EchoListener implements Listener {
         handleMessage(event);
     }
 
+    @Override
+    public void onPhotoMessageReceived(PhotoMessageReceivedEvent event) {
+        try {
+            analyzeImage(event);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void handleCommand(CommandMessageReceivedEvent event) {
         String[] args = event.getArgs();
         String argsString = event.getArgsString();
@@ -93,6 +111,8 @@ public class EchoListener implements Listener {
         final String STATS = "stats";
         final String COMMAND_DAY = "day";
         final String COMMAND_ME = "me";
+        final String COMMAND_FIND = "find";
+        final String COMMAND_RATE = "rate";
 
         if (command.equals("time")) {
             SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss", Locale.forLanguageTag(RU_TAG));
@@ -119,6 +139,14 @@ public class EchoListener implements Listener {
             } else {
                 TgMsgUtil.sendToChat(event, getStats(chatName, argsString.trim()));
             }
+        } else if (command.equals(COMMAND_FIND)) {
+            find(argsString, event);
+        } else if (command.equals(COMMAND_RATE)) {
+            if (argsString.trim().length() > 0) {
+                getRates(event, argsString);
+            } else {
+                getRates(event);
+            }
         }
     }
 
@@ -140,8 +168,9 @@ public class EchoListener implements Listener {
             }
         }
 
+
         // if debug mode, react only on owner
-        if (!botStatus.get(GLOBAL) || (DEBUG && senderUserName.equals(ME))) {
+        if (!botStatus.get(GLOBAL) || (DEBUG && !senderUserName.equals(ME))) {
             return;
         } else {
             Utils.println(TAG, "debug mode = " + DEBUG + ", bot status = " + botStatus.get(GLOBAL));
@@ -156,10 +185,11 @@ public class EchoListener implements Listener {
 
         messageText = messageText.replace(BOT, "").trim().toLowerCase();
 
-        final String fasString = "агрись на ";
-        final String antifasString = "хватит";
-        final String muteString = "выключи ";
-        final String FIND_TEXT = "найди ";
+        final String CMD_AGR = "агрись на ";
+        final String CMD_CANCEL = "хватит";
+        final String CMD_MUTE = "выключи ";
+        final String CMD_FIND_TEXT = "найди ";
+        final String CMD_RATES = "курс";
         final String HNTR = "хнтр";
 
         final Random random = new Random(System.currentTimeMillis());
@@ -177,9 +207,9 @@ public class EchoListener implements Listener {
         if (messageText.startsWith(BOT_PREFIX)) {
             messageText = messageText.replace(BOT_PREFIX, "");
             Utils.println(TAG, "request [" + messageText + "]");
-            if (messageText.startsWith(fasString)) {
+            if (messageText.startsWith(CMD_AGR)) {
                 if (senderUserName.equals(ME)) {
-                    userToFas = messageText.replaceFirst(fasString, "");
+                    userToFas = messageText.replaceFirst(CMD_AGR, "");
                     System.out.println("принято!");
                     TgMsgUtil.replyInChat(event, "принято!");
                     if (userToMute.equals(userToFas)) {
@@ -189,7 +219,18 @@ public class EchoListener implements Listener {
                 } else {
                     TgMsgUtil.replyInChat(event, "не ты мой хозяин!");
                 }
-            } else if (messageText.startsWith(antifasString) && senderUserName.equals(ME)) {
+            } else if (messageText.startsWith(CMD_MUTE)) {
+                if (senderUserName.equals(ME)) {
+                    TgMsgUtil.replyInChat(event, "принято!");
+                    userToMute = messageText.replaceFirst(CMD_MUTE, "");
+                    if (userToMute.equals(userToFas)) {
+                        userToFas = null;
+                        fasID = -1;
+                    }
+                } else {
+                    TgMsgUtil.replyInChat(event, "не ты мой хозяин!");
+                }
+            } else if (messageText.startsWith(CMD_CANCEL) && senderUserName.equals(ME)) {
                 userToFas = null;
                 fasID = -1;
                 userToMute = null;
@@ -198,6 +239,7 @@ public class EchoListener implements Listener {
                 TgMsgUtil.replyInChat(event, "ладно...");
             } else if (messageText.equals("котиков!")) {
                 Utils.println(TAG, "cats activated!");
+                TgMsgUtil.replyInChat(event, "котики всё");
                 if (catsFile != null) {
                     InputFile inputFile = new InputFile(catsFile);
                     SendablePhotoMessage sendablePhotoMessage = SendablePhotoMessage.builder()
@@ -209,31 +251,32 @@ public class EchoListener implements Listener {
                 } else {
                     TgMsgUtil.replyInChat(event, "у меня котопередоз, подождите");
                 }
-            } else if (messageText.startsWith(FIND_TEXT)) {
-                find(messageText.replace(FIND_TEXT, ""), event);
+            } else if (messageText.startsWith(CMD_FIND_TEXT)) {
+                find(messageText.replace(CMD_FIND_TEXT, ""), event);
+            } else if (messageText.equals(CMD_RATES)) {
+                getRates(event);
             } else if (messageText.equals("иди нахуй")) {
                 TgMsgUtil.replyInChat(event, "fuck you");
             } else if (messageText.equals("fuck you")) {
                 TgMsgUtil.replyInChat(event, "иди нахуй");
             }
         } else {
-            if (messageText.equals("42")) {
+            Message repliedTo = event.getMessage().getRepliedTo();
+            if (repliedTo != null) {
+                User repliedSender = repliedTo.getSender();
+                if (repliedSender.getUsername().equals(BOT)) {
+                    if (messageText.equals("а ты?")) {
+                        TgMsgUtil.replyInChat(event, "а я — бот");
+                    } else if (messageText.equals("ты кто?")) {
+                        TgMsgUtil.replyInChat(event, "я — бот");
+                    }
+                }
+            } else if (messageText.equals("42")) {
                 TgMsgUtil.replyInChat(event, "don't panic!");
             } else if (messageText.startsWith("ты ") && messageText.split(" ", -1).length == 2) {
                 TgMsgUtil.replyInChat(event, "нет ты!");
             } else if (messageText.startsWith("иди нахуй") && messageText.split(" ", -1).length == 2) {
                 TgMsgUtil.replyInChat(event, "сам иди!");
-            } else if (messageText.startsWith(muteString)) {
-                if (senderUserName.equals(ME)) {
-                    TgMsgUtil.replyInChat(event, "принято!");
-                    userToMute = messageText.replaceFirst(muteString, "");
-                    if (userToMute.equals(userToFas)) {
-                        userToFas = null;
-                        fasID = -1;
-                    }
-                } else {
-                    TgMsgUtil.replyInChat(event, "не ты мой хозяин!");
-                }
             } else if (messageText.equals("что было?") || messageText.equals("что тут было?") || messageText.equals("что тут у вас?") || messageText.equals("что тут?")) {
                 int i = random.nextInt(3);
                 if (i == 0) {
@@ -284,6 +327,70 @@ public class EchoListener implements Listener {
         }
     }
 
+    private void analyzeImage(PhotoMessageReceivedEvent event) throws IOException {
+        final String tempImgFilename = "tempimg";
+        PhotoSize[] photoSize = event.getContent().getContent();
+        File infile = new File(tempImgFilename);
+        photoSize[0].downloadFile(event.getMessage().getBotInstance(), infile);
+        byte[] currentFps = getFP(infile, true);
+
+        boolean bayanFound = false;
+        File fpsDir = new File(FPS_SUBDIR + File.separator + event.getChat().getId());
+        if (!fpsDir.exists()) {
+            fpsDir.mkdirs();
+        }
+
+        File fpssFiles[] = fpsDir.listFiles();
+        List<byte[]> fpss = new ArrayList<>();
+        for (File file : fpssFiles) {
+            byte[] fppsss = getFP(file, false);
+            fpss.add(fppsss);
+        }
+
+        for (byte[] bytes : fpss) {
+            if (Arrays.equals(bytes, currentFps)) {
+                bayanFound = true;
+                SendableTextMessage sendableMessage = SendableTextMessage.builder()
+                        .message("баян!")
+                        .replyTo(event.getMessage())
+                        .build();
+                event.getChat().sendMessage(sendableMessage);
+                break;
+            }
+        }
+
+        if (!bayanFound) {
+            saveFingerprint(infile, event.getChat().getId());
+        }
+    }
+
+    private byte[] getFP(File file, boolean foFP) throws IOException {
+        byte[] newData = null;
+        Path pathIn = Paths.get(file.getAbsolutePath());
+        byte[] data = Files.readAllBytes(pathIn);
+        int mult = foFP ? 42 : 1;
+        int fpSize = data.length / mult;
+        newData = new byte[fpSize];
+        for (int i = 0; i < fpSize; i++) {
+            newData[i] = data[i * mult];
+        }
+        return newData;
+    }
+
+    private void saveFingerprint(File file, String chatDir) {
+        File dir = new File(FPS_SUBDIR);
+        if (dir.isDirectory() && !dir.exists()) {
+            dir.mkdir();
+        }
+        Path pathOut = Paths.get(FPS_SUBDIR + File.separator + chatDir + File.separator + System.currentTimeMillis() + ".dat");
+        try {
+            Files.write(pathOut, getFP(file, true), StandardOpenOption.CREATE_NEW);
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+    }
+
+
     private int getPartOfDayInt(String text) {
         if (text.equals("утро?")) {
             return 0;
@@ -313,8 +420,43 @@ public class EchoListener implements Listener {
         }
     }
 
+    private String getValue(JSONObject valutes, String code) {
+        JSONObject usdJson = valutes.getJSONObject(code);
+        double value = usdJson.getDouble("Value");
+        double prevValue = usdJson.getDouble("Previous");
+
+        return value + " (" + (Math.round((value - prevValue) * 1000f) / 1000f) + ")";
+    }
+
+    private void getRates(TextMessageReceivedEvent event) {
+        try {
+            JSONObject jsonObject = getJSON("https://www.cbr-xml-daily.ru/daily_json.js");
+            JSONObject valutes = jsonObject.getJSONObject("Valute");
+            String usdValue = getValue(valutes, "USD");
+            String eurValue = getValue(valutes, "EUR");
+            String msg = "USD: " + usdValue + "\r\n" + "EUR: " + eurValue;
+            TgMsgUtil.replyInChat(event, msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void getRates(TextMessageReceivedEvent event, String code) {
+        try {
+            JSONObject jsonObject = getJSON("https://www.cbr-xml-daily.ru/daily_json.js");
+            JSONObject valutes = jsonObject.getJSONObject("Valute");
+            String usdValue = getValue(valutes, code);
+            String msg = code + ": " + usdValue;
+            TgMsgUtil.replyInChat(event, msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     // tries to find an image for the query
     private void find(String query, TextMessageReceivedEvent event) {
+//        TgMsgUtil.replyInChat(event, "отказать");
+
         File file = getGoogleQuery(query);
         if (file != null) {
             InputFile inputFile = new InputFile(file);
@@ -351,25 +493,17 @@ public class EchoListener implements Listener {
 
         query = query.replaceAll(" ", "%20");
 
-        final String q = "https://api.qwant.com/api/search/images?count=1&offset=" + random.nextInt(200) + "&q=" + query;
+        final String q = "https://contextualwebsearch.com/api/Search/ImageSearchAPI?q=" + query + "&count=100";
         try {
-            URL url = new URL(q);
-            URLConnection connection = url.openConnection();
-
-            String line;
-            StringBuilder builder = new StringBuilder();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            while ((line = reader.readLine()) != null) {
-                builder.append(line);
+            JSONObject jsonObject = getJSON(q);
+            JSONArray array = jsonObject.getJSONArray("value");
+            if (array.length() == 0) {
+                return null;
             }
-
-
-            JSONObject json = new JSONObject(builder.toString());
-            String imageUrl = json.getJSONObject("data").getJSONObject("result").getJSONArray("items").getJSONObject(0).getString("media_fullsize");
-            imageUrl = "https:" + imageUrl;
-
+            int randomIndex = random.nextInt(array.length());
+            String imageUrl = array.getJSONObject(randomIndex).getString("url");
+//            imageUrl = "https:" + imageUrl;
             BufferedImage image = ImageIO.read(new URL(imageUrl));
-
 
             File outputfile = new File("image.jpg");
             ImageIO.write(image, "jpg", outputfile);
@@ -380,6 +514,20 @@ public class EchoListener implements Listener {
         }
 
         return null;
+    }
+
+    private JSONObject getJSON(String query) throws IOException {
+        URL url = new URL(query);
+        URLConnection connection = url.openConnection();
+
+        String line;
+        StringBuilder builder = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        while ((line = reader.readLine()) != null) {
+            builder.append(line);
+        }
+
+        return new JSONObject(builder.toString());
     }
 
     private String getYandexSearch(final String query) {

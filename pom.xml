@@ -6,7 +6,7 @@
 
     <groupId>com.psbelov.java.tg.bot</groupId>
     <artifactId>pbelov_tg_bot</artifactId>
-    <version>0.4.3</version>
+    <version>0.5.3</version>
     <dependencies>
         <dependency>
             <groupId>pro.zackpollard.telegrambot.api</groupId>
@@ -22,10 +22,17 @@
         </dependency>
         <dependency>
             <groupId>pro.zackpollard.telegrambot.api</groupId>
-            <artifactId>jtelegram-botapi-all</artifactId>
+            <artifactId>jtelegram-botapi</artifactId>
             <version>1.7.0</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/libs/jtelegram-botapi-1.7.0.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>pro.zackpollard.telegrambot.api</groupId>
+            <artifactId>jtelegram-botapi-conversations</artifactId>
+            <version>1.7.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/jtelegram-botapi-conversations-1.7.0.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

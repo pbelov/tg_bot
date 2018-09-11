@@ -7,16 +7,16 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.file.Paths;
 
 public class FileUtils {
-    public static final File WORKING_DIR = new File(Paths.get("").toAbsolutePath().toString());
+    static final File WORKING_DIR = new File(Paths.get("").toAbsolutePath().toString());
     public static final char FILENAME_DELIMITER = '_';
     private static final String TAG = "FileUtils";
     private static final Charset[] charsets = {Charset.forName("UTF-8"), Charset.forName("ISO-8859-1")};
 
-    public static void appendStringToFile(String string, File outputFile) {
+    static void appendStringToFile(String string, File outputFile) {
         writeStringToFile(string, outputFile, true);
     }
 
-    public static void writeStringToFile(String string, File outputFile) {
+    static void writeStringToFile(String string, File outputFile) {
         writeStringToFile(string, outputFile, false);
     }
 

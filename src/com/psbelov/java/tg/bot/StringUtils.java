@@ -3,21 +3,21 @@ package com.psbelov.java.tg.bot;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StringUtils {
-    public static final String DELIMITER = "\",\"";
-    public static final String NEW_LINE_SEPARATOR = "\r\n";
-    private static final String TAG = "StringUtils";
-
-    public static String getCurrentTimeStamp() {
+    static String getCurrentTimeStamp() {
         SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
         Date now = new Date();
 
         return sdfDate.format(now);
     }
 
-    public static void handleException(String TAG, Exception e) {
+    static void handleException(String TAG, Exception e) {
         if (Main.DEBUG) {
             e.printStackTrace();
         } else {
@@ -52,5 +52,19 @@ public class StringUtils {
 
     public static boolean isEmpty(String value) {
         return value == null || value.length() == 0;
+    }
+
+    static List<String> extractUrls(String text) {
+        List<String> containedUrls = new ArrayList<>();
+        String urlRegex = "((https?|ftp):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)";
+        Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);
+        Matcher urlMatcher = pattern.matcher(text);
+
+        while (urlMatcher.find()) {
+            containedUrls.add(text.substring(urlMatcher.start(0),
+                    urlMatcher.end(0)));
+        }
+
+        return containedUrls;
     }
 }

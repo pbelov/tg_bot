@@ -31,18 +31,18 @@ public class Utils {
         }
     }
 
-    public static String fixFileName(String filename) {
+    static String fixFileName(String filename) {
         return filename.replaceAll(":", "");
     }
 
-    public static void println(String tag, String str, String filename) {
+    static void println(String tag, String str, String filename) {
         filename = fixFileName(filename);
         checkFile(new File(WORKING_DIR + File.separator + LOGDIR, filename));
         System.out.println(Main.DEBUG ? tag + ": " + str : str);
         FileUtils.appendStringToFile(str + "\r\n", new File(LOGDIR, filename + ".log"));
     }
 
-    public static void println(String tag, String str) {
+    static void println(String tag, String str) {
         checkLogFile();
 
         //noinspection ConstantConditions
@@ -50,7 +50,7 @@ public class Utils {
         FileUtils.appendStringToFile(str + "\r\n", logFile);
     }
 
-    public static void error(String tag, String str) {
+    static void error(String tag, String str) {
         checkLogFile();
 
         if (Main.DEBUG) {
@@ -67,7 +67,7 @@ public class Utils {
         }
     }
 
-    public static List<UserMessages> convertToListUserMessages(Map<String, Integer> map) {
+    static List<UserMessages> convertToListUserMessages(Map<String, Integer> map) {
         if (map == null || map.isEmpty()) {
             return null;
         }
@@ -81,7 +81,7 @@ public class Utils {
         return list;
     }
 
-    public static void incrementNumberInMap(Map<String, Integer> map, String word) {
+    static void incrementNumberInMap(Map<String, Integer> map, String word) {
         if (map.containsKey(word)) {
             int n = map.get(word);
             map.put(word, ++n);

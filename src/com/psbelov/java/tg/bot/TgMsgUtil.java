@@ -6,8 +6,8 @@ import pro.zackpollard.telegrambot.api.event.chat.message.TextMessageReceivedEve
 /**
  * Created by pbelov on 10/10/2016.
  */
-public class TgMsgUtil {
-    public static void replyInChat(TextMessageReceivedEvent event, String message) {
+class TgMsgUtil {
+    static void replyInChat(TextMessageReceivedEvent event, String message) {
         SendableTextMessage sendableMessage = SendableTextMessage.builder()
                 .message(message)
                 .replyTo(event.getMessage())
@@ -15,7 +15,7 @@ public class TgMsgUtil {
         event.getChat().sendMessage(sendableMessage);
     }
 
-    public static void sendToChat(TextMessageReceivedEvent event, String message) {
+    static void sendToChat(TextMessageReceivedEvent event, String message) {
         SendableTextMessage sendableMessage = SendableTextMessage.builder()
                 .message(message)
                 .build();

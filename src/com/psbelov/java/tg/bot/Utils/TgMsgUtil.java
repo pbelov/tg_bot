@@ -1,4 +1,4 @@
-package com.psbelov.java.tg.bot;
+package com.psbelov.java.tg.bot.Utils;
 
 import pro.zackpollard.telegrambot.api.chat.message.send.SendableTextMessage;
 import pro.zackpollard.telegrambot.api.event.chat.message.TextMessageReceivedEvent;
@@ -6,8 +6,10 @@ import pro.zackpollard.telegrambot.api.event.chat.message.TextMessageReceivedEve
 /**
  * Created by pbelov on 10/10/2016.
  */
-class TgMsgUtil {
-    static void replyInChat(TextMessageReceivedEvent event, String message) {
+public class TgMsgUtil {
+    private TgMsgUtil() {}
+
+    public static void replyInChat(TextMessageReceivedEvent event, String message) {
         SendableTextMessage sendableMessage = SendableTextMessage.builder()
                 .message(message)
                 .replyTo(event.getMessage())
@@ -15,7 +17,7 @@ class TgMsgUtil {
         event.getChat().sendMessage(sendableMessage);
     }
 
-    static void sendToChat(TextMessageReceivedEvent event, String message) {
+    public static void sendToChat(TextMessageReceivedEvent event, String message) {
         SendableTextMessage sendableMessage = SendableTextMessage.builder()
                 .message(message)
                 .build();

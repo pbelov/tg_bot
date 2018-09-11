@@ -1,4 +1,4 @@
-package com.psbelov.java.tg.bot;
+package com.psbelov.java.tg.bot.Utils;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -7,10 +7,11 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.file.Paths;
 
 public class FileUtils {
-    static final File WORKING_DIR = new File(Paths.get("").toAbsolutePath().toString());
-    public static final char FILENAME_DELIMITER = '_';
+    public static final File WORKING_DIR = new File(Paths.get("").toAbsolutePath().toString());
     private static final String TAG = "FileUtils";
     private static final Charset[] charsets = {Charset.forName("UTF-8"), Charset.forName("ISO-8859-1")};
+
+    private FileUtils() {}
 
     static void appendStringToFile(String string, File outputFile) {
         writeStringToFile(string, outputFile, true);

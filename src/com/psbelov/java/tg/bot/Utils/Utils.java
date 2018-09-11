@@ -1,14 +1,19 @@
-package com.psbelov.java.tg.bot;
+package com.psbelov.java.tg.bot.Utils;
+
+import com.psbelov.java.tg.bot.Main;
+import com.psbelov.java.tg.bot.UserMessages;
 
 import java.io.File;
 import java.util.*;
 
-import static com.psbelov.java.tg.bot.FileUtils.WORKING_DIR;
+import static com.psbelov.java.tg.bot.Utils.FileUtils.WORKING_DIR;
 
 public class Utils {
     private static File logFile = new File("log.txt");
-    static final String LOGDIR = "logs";
+    public static final String LOGDIR = "logs";
     private static boolean logFileDeleted = false;
+
+    private Utils() {}
 
     private static void checkFile(File file) {
         if (file == null) {
@@ -31,18 +36,18 @@ public class Utils {
         }
     }
 
-    static String fixFileName(String filename) {
+    public static String fixFileName(String filename) {
         return filename.replaceAll(":", "");
     }
 
-    static void println(String tag, String str, String filename) {
+    public static void println(String tag, String str, String filename) {
         filename = fixFileName(filename);
         checkFile(new File(WORKING_DIR + File.separator + LOGDIR, filename));
         System.out.println(Main.DEBUG ? tag + ": " + str : str);
         FileUtils.appendStringToFile(str + "\r\n", new File(LOGDIR, filename + ".log"));
     }
 
-    static void println(String tag, String str) {
+    public static void println(String tag, String str) {
         checkLogFile();
 
         //noinspection ConstantConditions
@@ -67,7 +72,7 @@ public class Utils {
         }
     }
 
-    static List<UserMessages> convertToListUserMessages(Map<String, Integer> map) {
+    public static List<UserMessages> convertToListUserMessages(Map<String, Integer> map) {
         if (map == null || map.isEmpty()) {
             return null;
         }
@@ -81,7 +86,7 @@ public class Utils {
         return list;
     }
 
-    static void incrementNumberInMap(Map<String, Integer> map, String word) {
+    public static void incrementNumberInMap(Map<String, Integer> map, String word) {
         if (map.containsKey(word)) {
             int n = map.get(word);
             map.put(word, ++n);

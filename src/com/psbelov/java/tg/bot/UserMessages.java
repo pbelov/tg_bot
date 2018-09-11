@@ -2,9 +2,9 @@ package com.psbelov.java.tg.bot;
 
 public class UserMessages {
     String userName;
-    int messagesCount;
+    public int messagesCount;
 
-    UserMessages(String key, int value) {
+    public UserMessages(String key, int value) {
         userName = key;
         messagesCount = value;
     }

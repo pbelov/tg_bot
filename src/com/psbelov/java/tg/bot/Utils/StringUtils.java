@@ -1,5 +1,7 @@
-package com.psbelov.java.tg.bot;
+package com.psbelov.java.tg.bot.Utils;
 
+
+import com.psbelov.java.tg.bot.Main;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -10,7 +12,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StringUtils {
-    static String getCurrentTimeStamp() {
+    private StringUtils() {}
+
+    public static String getCurrentTimeStamp() {
         SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
         Date now = new Date();
 
@@ -54,7 +58,9 @@ public class StringUtils {
         return value == null || value.length() == 0;
     }
 
-    static List<String> extractUrls(String text) {
+    public static List<String> extractUrls(String text) {
+        text = text.replaceAll("https://", "http://");
+
         List<String> containedUrls = new ArrayList<>();
         String urlRegex = "((https?|ftp):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)";
         Pattern pattern = Pattern.compile(urlRegex, Pattern.CASE_INSENSITIVE);

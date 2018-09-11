@@ -1,5 +1,7 @@
 package com.psbelov.java.tg.bot;
 
+import com.psbelov.java.tg.bot.Utils.TgMsgUtil;
+import com.psbelov.java.tg.bot.Utils.Utils;
 import pro.zackpollard.telegrambot.api.chat.message.Message;
 import pro.zackpollard.telegrambot.api.event.Listener;
 import pro.zackpollard.telegrambot.api.event.chat.message.CommandMessageReceivedEvent;
@@ -19,13 +21,13 @@ public class EchoListener implements Listener {
 
     @Override
     public void onCommandMessageReceived(CommandMessageReceivedEvent event) {
-        MessageHelper.getBaseData(event, "command");
+        BaseEventsHelper.getBaseData(event, "command");
         handleCommand(event);
     }
 
     @Override
     public void onTextMessageReceived(TextMessageReceivedEvent event) {
-        MessageHelper.getBaseData(event, "text message");
+        BaseEventsHelper.getBaseData(event, "text message");
         handleMessage(event);
     }
 
@@ -39,7 +41,7 @@ public class EchoListener implements Listener {
     }
 
     private void handleCommand(CommandMessageReceivedEvent event) {
-        final String command = MessageHelper.getCommandsData(event);
+        final String command = CommandsHelper.getCommandsData(event);
 
         final String STATS = "stats";
         final String COMMAND_DAY = "day";
@@ -48,23 +50,23 @@ public class EchoListener implements Listener {
         final String COMMAND_RATE = "rate";
 
         if (command.equals("time")) {
-            MessageHelper.handleTimeCommand(event);
+            CommandsHelper.handleTimeCommand(event);
         } else if (command.equals("date")) {
-            MessageHelper.handleDateCommand(event);
+            CommandsHelper.handleDateCommand(event);
         } else if (command.startsWith(COMMAND_ME)) {
-            MessageHelper.handleMeCommand(event);
+            CommandsHelper.handleMeCommand(event);
         } else if (command.equals("ping")) {
             TgMsgUtil.replyInChat(event, "pong!");
         } else if (command.equals("top")) {
-            MessageHelper.handleTopCommand(event);
+            CommandsHelper.handleTopCommand(event);
         } else if (command.equals(COMMAND_DAY)) {
-            MessageHelper.showDay(event);
+            CommandsHelper.showDay(event);
         } else if (command.equals(STATS)) {
-            MessageHelper.handleStatsCommand(event);
+            CommandsHelper.handleStatsCommand(event);
         } else if (command.equals(COMMAND_FIND)) {
-            MessageHelper.find(event);
+            CommandsHelper.find(event);
         } else if (command.equals(COMMAND_RATE)) {
-            MessageHelper.getRates(event);
+            CommandsHelper.getRates(event);
         }
     }
 
@@ -75,7 +77,7 @@ public class EchoListener implements Listener {
             MessageHelper.handleBotCommands(event);
         }
 
-        if (!MessageHelper.checkBotStatus()) {
+        if (!BaseEventsHelper.checkBotStatus()) {
             return;
         }
 
@@ -90,17 +92,17 @@ public class EchoListener implements Listener {
             messageText = messageText.replace(BOT_PREFIX, "");
             Utils.println(TAG, "request [" + messageText + "]");
             if (messageText.startsWith(MessageHelper.CMD_AGR)) {
-                MessageHelper.handleArgCommand(event);
+                MessageHelper.handleArgMessage(event);
             } else if (messageText.startsWith(MessageHelper.CMD_MUTE)) {
-                MessageHelper.handleMuteCommand(event);
+                MessageHelper.handleMuteMessage(event);
             } else if (messageText.startsWith(MessageHelper.CMD_CANCEL)) {
-                MessageHelper.handleCancelCommand(event);
+                MessageHelper.handleCancelMessage(event);
             } else if (messageText.equals("котиков!")) {
-                MessageHelper.handleCatsCommand(event);
+                BaseEventsHelper.handleCatsMessage(event);
             } else if (messageText.startsWith(MessageHelper.CMD_FIND_TEXT)) {
-                MessageHelper.find(event);
+                CommandsHelper.find(event);
             } else if (messageText.equals(MessageHelper.CMD_RATES)) {
-                MessageHelper.getRates(event);
+                CommandsHelper.getRates(event);
             } else if (messageText.equals(MessageHelper.CMD_TRANSLATE)) {
                 MessageHelper.translateMessage(event);
             } else if (messageText.equals("иди нахуй")) {

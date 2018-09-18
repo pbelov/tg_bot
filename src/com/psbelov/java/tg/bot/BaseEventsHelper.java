@@ -66,7 +66,6 @@ class BaseEventsHelper {
     }
 
     static boolean checkBotStatus() {
-
         // if debug mode, react only on owner
         if (!botStatus.get(GLOBAL) || (Main.DEBUG && !senderUserName.equals(ME))) {
             return false;
@@ -74,7 +73,6 @@ class BaseEventsHelper {
             Utils.println(TAG, "debug mode = " + Main.DEBUG + ", bot status = " + botStatus.get(GLOBAL));
             return true;
         }
-
     }
 
     // tries to find an image for the query

@@ -327,6 +327,7 @@ class MessageHelper extends BaseEventsHelper {
         }
 
         if (!newDayMap.get(chatName).equals(prevDayMap.get(chatName))) {
+            messagesMap.clear();
             if (hour > 6 && hour < 12) {
                 TgMsgUtil.replyInChat(event, MessageHelper.getMorningText(random.nextInt(mornings.length)));
             }

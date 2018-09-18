@@ -6,7 +6,7 @@
 
     <groupId>com.psbelov.java.tg.bot</groupId>
     <artifactId>pbelov_tg_bot</artifactId>
-    <version>0.7.1</version>
+    <version>0.7.2</version>
     <dependencies>
         <dependency>
             <groupId>pro.zackpollard.telegrambot.api</groupId>

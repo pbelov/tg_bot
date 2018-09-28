@@ -82,7 +82,6 @@ public class EchoListener implements Listener {
         }
 
         MessageHelper.checkForBayan(event);
-        MessageHelper.incrementMessagesNumberFor();
 
         final Random random = new Random(System.currentTimeMillis());
         MessageHelper.handleMorning(event, random);
@@ -147,6 +146,7 @@ public class EchoListener implements Listener {
             TgMsgUtil.replyInChat(event, "нт.");
         }
 
+        MessageHelper.incrementMessagesNumberFor();
         MessageHelper.handleFasAndMuted(event, random);
     }
 }

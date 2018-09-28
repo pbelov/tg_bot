@@ -44,7 +44,7 @@ public class Utils {
         filename = fixFileName(filename);
         checkFile(new File(WORKING_DIR + File.separator + LOGDIR, filename));
         System.out.println(Main.DEBUG ? tag + ": " + str : str);
-        FileUtils.appendStringToFile(str + "\r\n", new File(LOGDIR, filename + ".log"));
+//        FileUtils.appendStringToFile(str + "\r\n", new File(LOGDIR, filename + ".log"));
     }
 
     public static void println(String tag, String str) {
@@ -52,7 +52,7 @@ public class Utils {
 
         //noinspection ConstantConditions
         System.out.println(Main.DEBUG ? tag + ": " + str : str);
-        FileUtils.appendStringToFile(str + "\r\n", logFile);
+//        FileUtils.appendStringToFile(str + "\r\n", logFile);
     }
 
     static void error(String tag, String str) {

@@ -31,7 +31,7 @@ public class Main {
         //This method starts the retrieval of updates.
         //The boolean it accepts is to specify whether to retrieve messages
         //which were sent before the bot was started but after the bot was last turned off.
-        telegramBot.startUpdates(false);
+        telegramBot.startUpdates(true);
         println("Started updates listener");
 
         //The following while(true) loop is simply for keeping the java application alive.

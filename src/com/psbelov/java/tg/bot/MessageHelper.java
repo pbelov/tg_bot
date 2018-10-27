@@ -9,7 +9,6 @@ import pro.zackpollard.telegrambot.api.chat.message.content.type.PhotoSize;
 import pro.zackpollard.telegrambot.api.chat.message.send.SendableTextMessage;
 import pro.zackpollard.telegrambot.api.event.chat.message.PhotoMessageReceivedEvent;
 import pro.zackpollard.telegrambot.api.event.chat.message.TextMessageReceivedEvent;
-import pro.zackpollard.telegrambot.api.user.User;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -327,7 +326,10 @@ class MessageHelper extends BaseEventsHelper {
         }
 
         if (!newDayMap.get(chatName).equals(prevDayMap.get(chatName))) {
-            messagesMap.clear();
+            Map<String, Integer> chatMsgMap = messagesMap.get(chatName);
+            if (chatMsgMap != null) {
+                chatMsgMap.clear();
+            }
             if (hour > 6 && hour < 12) {
                 TgMsgUtil.replyInChat(event, MessageHelper.getMorningText(random.nextInt(mornings.length)));
             }

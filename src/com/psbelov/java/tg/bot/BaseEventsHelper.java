@@ -36,7 +36,7 @@ class BaseEventsHelper {
     static int hour, day;
 
     static final String CMD_FIND_TEXT = "найди ";
-    private static File catsFile = getSearchQuery("cats");
+//    private static File catsFile = getSearchQuery("cats");
 
     static final String GLOBAL = "global";
 
@@ -94,21 +94,21 @@ class BaseEventsHelper {
         }
     }
 
-    static void handleCatsMessage(TextMessageReceivedEvent event) {
-        Utils.println(TAG, "cats activated!");
-        TgMsgUtil.replyInChat(event, "котики всё");
-        if (catsFile != null) {
-            InputFile inputFile = new InputFile(catsFile);
-            SendablePhotoMessage sendablePhotoMessage = SendablePhotoMessage.builder()
-                    .photo(inputFile)
-                    .build();
-            event.getChat().sendMessage(sendablePhotoMessage);
-            catsFile.delete();
-            catsFile = getSearchQuery("cats");
-        } else {
-            TgMsgUtil.replyInChat(event, "у меня котопередоз, подождите");
-        }
-    }
+//    static void handleCatsMessage(TextMessageReceivedEvent event) {
+//        Utils.println(TAG, "cats activated!");
+//        TgMsgUtil.replyInChat(event, "котики всё");
+//        if (catsFile != null) {
+//            InputFile inputFile = new InputFile(catsFile);
+//            SendablePhotoMessage sendablePhotoMessage = SendablePhotoMessage.builder()
+//                    .photo(inputFile)
+//                    .build();
+//            event.getChat().sendMessage(sendablePhotoMessage);
+//            catsFile.delete();
+//            catsFile = getSearchQuery("cats");
+//        } else {
+//            TgMsgUtil.replyInChat(event, "у меня котопередоз, подождите");
+//        }
+//    }
 
     private static File getSearchQuery(String query) {
         Random random = new Random(System.currentTimeMillis());

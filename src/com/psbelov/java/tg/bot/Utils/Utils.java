@@ -73,10 +73,10 @@ public class Utils {
     }
 
     public static List<UserMessages> convertToListUserMessages(Map<String, Integer> map) {
-        if (map == null || map.isEmpty()) {
-            return null;
-        }
         List<UserMessages> list = new ArrayList<>();
+        if (map == null || map.isEmpty()) {
+            return list;
+        }
         for (Map.Entry<String, Integer> entry : map.entrySet()) {
             list.add(new UserMessages(entry.getKey(), entry.getValue()));
         }

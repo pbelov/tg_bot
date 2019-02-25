@@ -96,8 +96,8 @@ public class EchoListener implements Listener {
                 MessageHelper.handleMuteMessage(event);
             } else if (messageText.startsWith(MessageHelper.CMD_CANCEL)) {
                 MessageHelper.handleCancelMessage(event);
-            } else if (messageText.equals("котиков!")) {
-                BaseEventsHelper.handleCatsMessage(event);
+//            } else if (messageText.equals("котиков!")) {
+//                BaseEventsHelper.handleCatsMessage(event);
             } else if (messageText.startsWith(MessageHelper.CMD_FIND_TEXT)) {
                 CommandsHelper.find(event);
             } else if (messageText.equals(MessageHelper.CMD_RATES)) {

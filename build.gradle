@@ -17,6 +17,10 @@ dependencies {
     compile fileTree(dir: 'libs', includes: ['*.jar'])
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
+
 jar {
     manifest {
         attributes 'Implementation-Title': 'com.psbelov.java.tg.bot.Main',

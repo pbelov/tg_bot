@@ -177,12 +177,16 @@ class CommandsHelper extends BaseEventsHelper {
         Map<String, Integer> userMessagesInChat = messagesMap.get(chatName);
         List<UserMessages> userMessagesList = Utils.convertToListUserMessages(userMessagesInChat);
 
-        StringBuilder sb = new StringBuilder("Топ 3 за сегодня:");
-
+        StringBuilder sb = new StringBuilder();
         int topCount = Math.min(userMessagesList.size(), 3);
-        for (int i = 0; i < topCount; i++) {
-            UserMessages userMessages = userMessagesList.get(i);
-            sb.append("\r\n").append(userMessages);
+        if (topCount > 0) {
+            sb.append("Топ 3 за сегодня:");
+            for (int i = 0; i < topCount; i++) {
+                UserMessages userMessages = userMessagesList.get(i);
+                sb.append("\r\n").append(userMessages);
+            }
+        } else {
+            sb.append("Нет статы");
         }
 
         return sb.toString();

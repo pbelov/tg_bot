@@ -1,0 +1,38 @@
+group 'com.psbelov.java.tg.bot'
+version '1.0'
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile 'com.google.code.gson:gson:2.7'
+    compile 'org.json:json:20160212'
+    compile 'com.mashape.unirest:unirest-java:1.4.9'
+    compile 'commons-io:commons-io:2.5'
+    compile fileTree(dir: 'libs', includes: ['*.jar'])
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'com.psbelov.java.tg.bot.Main',
+                'Implementation-Version': 1.0
+    }
+}
+
+jar {
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    manifest {
+        attributes(
+                'Main-Class': 'com.psbelov.java.tg.bot.Main'
+        )
+    }
+}

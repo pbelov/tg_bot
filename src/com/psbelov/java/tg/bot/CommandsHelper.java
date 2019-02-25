@@ -131,7 +131,7 @@ class CommandsHelper extends BaseEventsHelper {
 
     static void showDay(TextMessageReceivedEvent event) {
         File file = getHolidays();
-        if (file != null) {
+        if (file != null && file.exists()) {
             InputFile inputFile = new InputFile(file);
             SendablePhotoMessage sendablePhotoMessage = SendablePhotoMessage.builder().photo(inputFile).build();
             event.getChat().sendMessage(sendablePhotoMessage);
@@ -164,7 +164,8 @@ class CommandsHelper extends BaseEventsHelper {
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd", Locale.forLanguageTag(RU_TAG));
         try {
             File file = new File("holydays.png");
-            org.apache.commons.io.FileUtils.copyURLToFile(new URL("http://www.calend.ru/img/export/informer_names.png?" + format.format(new Date())), file);
+            URL url = new URL("https://www.calend.ru/img/export/informer_names.png?" + format.format(new Date()));
+            org.apache.commons.io.FileUtils.copyURLToFile(url, file);
             return file;
         } catch (IOException e) {
             e.printStackTrace();

@@ -10,6 +10,8 @@ import pro.zackpollard.telegrambot.api.chat.message.send.SendableTextMessage;
 import pro.zackpollard.telegrambot.api.event.chat.message.CommandMessageReceivedEvent;
 import pro.zackpollard.telegrambot.api.event.chat.message.TextMessageReceivedEvent;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -126,6 +128,30 @@ class CommandsHelper extends BaseEventsHelper {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    static void getNonExistingCat(TextMessageReceivedEvent event) {
+        BufferedImage image = null;
+        File outputfile = null;
+        try {
+            URL url = new URL("https://thiscatdoesnotexist.com/");
+            image = ImageIO.read(url);
+            outputfile = new File("saved.png");
+            ImageIO.write(image, "jpg", outputfile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (outputfile != null) {
+            InputFile inputFile = new InputFile(outputfile);
+            SendablePhotoMessage sendablePhotoMessage = SendablePhotoMessage.builder()
+                    .photo(inputFile)
+                    .caption("этот котик не существует")
+                    .build();
+            event.getChat().sendMessage(sendablePhotoMessage);
+        } else {
+            event.getChat().sendMessage("с котиками что-то не так");
         }
     }
 

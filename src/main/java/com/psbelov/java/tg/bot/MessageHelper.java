@@ -2,9 +2,6 @@ package com.psbelov.java.tg.bot;
 
 import com.psbelov.java.tg.bot.Utils.StringUtils;
 import com.psbelov.java.tg.bot.Utils.TgMsgUtil;
-import com.psbelov.java.tg.bot.Utils.Utils;
-import pro.zackpollard.telegrambot.api.chat.message.Message;
-import pro.zackpollard.telegrambot.api.chat.message.content.Content;
 import pro.zackpollard.telegrambot.api.chat.message.content.type.PhotoSize;
 import pro.zackpollard.telegrambot.api.chat.message.send.SendableTextMessage;
 import pro.zackpollard.telegrambot.api.event.chat.message.PhotoMessageReceivedEvent;
@@ -33,7 +30,7 @@ class MessageHelper extends BaseEventsHelper {
     static final String CMD_CANCEL = "хватит";
     static final String CMD_MUTE = "выключи ";
     static final String CMD_RATES = "курс";
-    static final String CMD_TRANSLATE = "переведи";
+    static final String CMD_CATS = "котиков";
 
     //TODO: add others
     static final String HNTR = "хнтр";
@@ -193,13 +190,6 @@ class MessageHelper extends BaseEventsHelper {
         return readCase;
     }
 
-    static void translateMessage(TextMessageReceivedEvent event) {
-        Message repliedToMessage = event.getMessage().getRepliedTo();
-        Content content = repliedToMessage.getContent();
-
-        Utils.println(TAG, "content = " + content);
-    }
-
     static void analyzeImage(PhotoMessageReceivedEvent event) throws IOException {
         final String tempImgFilename = "tempimg";
         PhotoSize[] photoSize = event.getContent().getContent();
@@ -336,6 +326,7 @@ class MessageHelper extends BaseEventsHelper {
             SimpleDateFormat format = new SimpleDateFormat("d MMMM, EEEE", Locale.forLanguageTag(RU_TAG));
             TgMsgUtil.sendToChat(event, format.format(new Date()));
             prevDayMap.put(chatName, day);
+            CommandsHelper.getNonExistingCat(event);
             MessageHelper.saveSerializable(prevDayMap, "prevDayMap");
 //            showDay(event);
         }

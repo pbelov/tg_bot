@@ -12,6 +12,7 @@ import pro.zackpollard.telegrambot.api.user.User;
 import java.io.IOException;
 import java.util.Random;
 
+import static com.psbelov.java.tg.bot.BaseEventsHelper.*;
 import static com.psbelov.java.tg.bot.MessageHelper.BOT;
 import static com.psbelov.java.tg.bot.MessageHelper.BOT_PREFIX;
 
@@ -48,6 +49,7 @@ public class EchoListener implements Listener {
         final String COMMAND_ME = "me";
         final String COMMAND_FIND = "find";
         final String COMMAND_RATE = "rate";
+        final String COMMAND_CAT = "cat";
 
         if (command.equals("time")) {
             CommandsHelper.handleTimeCommand(event);
@@ -67,11 +69,17 @@ public class EchoListener implements Listener {
             CommandsHelper.find(event);
         } else if (command.equals(COMMAND_RATE)) {
             CommandsHelper.getRates(event);
+        } else if (command.equals(COMMAND_CAT)) {
+            CommandsHelper.getNonExistingCat(event);
         }
     }
 
     private void handleMessage(TextMessageReceivedEvent event) {
         String messageText = MessageHelper.getMessagesData();
+        if (messageText.equals("")) {
+            System.out.println("status: " + botStatus.get(GLOBAL));
+        }
+            System.out.println("messageText: " + messageText);
 
         if (messageText.startsWith(BOT_PREFIX)) {
             MessageHelper.handleBotCommands(event);
@@ -85,6 +93,7 @@ public class EchoListener implements Listener {
 
         final Random random = new Random(System.currentTimeMillis());
         MessageHelper.handleMorning(event, random);
+
 
         messageText = messageText.replace(BOT, "").trim().toLowerCase();
         if (messageText.startsWith(BOT_PREFIX)) {
@@ -102,12 +111,12 @@ public class EchoListener implements Listener {
                 CommandsHelper.find(event);
             } else if (messageText.equals(MessageHelper.CMD_RATES)) {
                 CommandsHelper.getRates(event);
-            } else if (messageText.equals(MessageHelper.CMD_TRANSLATE)) {
-                MessageHelper.translateMessage(event);
             } else if (messageText.equals("иди нахуй")) {
                 TgMsgUtil.replyInChat(event, "fuck you");
             } else if (messageText.equals("fuck you")) {
                 TgMsgUtil.replyInChat(event, "иди нахуй");
+            } else if (messageText.equals(MessageHelper.CMD_CATS)) {
+                CommandsHelper.getNonExistingCat(event);
             }
         } else {
             Message repliedTo = event.getMessage().getRepliedTo();
